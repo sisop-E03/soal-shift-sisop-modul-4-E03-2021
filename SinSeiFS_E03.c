@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <sys/time.h>
 
-static  const  char *dirpath = "/home/[user]/Downloads";
-// static  const  char *dirpath = "/home/iwandp/Downloads";
+// static const char *dirpath = "/home/[user]/Donwloads";
+static const char *dirpath = "/home/iwandp/Downloads";
 
 static  int  xmp_getattr(const char *path, struct stat *stbuf)
 {
@@ -94,4 +94,21 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
     close(fd);
 
     return res;
+}
+
+
+
+static struct fuse_operations xmp_oper = {
+    .getattr = xmp_getattr,
+    .readdir = xmp_readdir,
+    .read = xmp_read,
+};
+
+
+
+int  main(int  argc, char *argv[])
+{
+    umask(0);
+
+    return fuse_main(argc, argv, &xmp_oper, NULL);
 }
