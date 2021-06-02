@@ -11,12 +11,46 @@
 // static const char *dirpath = "/home/[user]/Donwloads";
 static const char *dirpath = "/home/iwandp/Downloads";
 
+int is_starts_with(const char *a, const char *b)
+{
+   if(strncmp(a, b, strlen(b)) == 0) return 1;
+   return 0;
+}
+
+// Enkripsi dan dekripsi string mulai dari index ke-i 
+void atbash(char *str, int i){
+    while(str[i]!='\0')
+    {
+        if(!((str[i]>=0&&str[i]<65)||(str[i]>90&&str[i]<97)||(str[i]>122&&str[i]<=127)))
+        {
+            if(str[i]>='A'&&str[i]<='Z')
+                str[i] = 'Z' + 'A' - str[i];
+            if(str[i]>='a'&&str[i]<='z')
+                str[i] = 'z'+'a'-str[i];
+        } 
+        i++;
+    }
+}
+
 static  int  xmp_getattr(const char *path, struct stat *stbuf)
 {
+    printf("xmp_getattr: %s\n", path);
     int res;
     char fpath[1000];
 
-    sprintf(fpath,"%s%s",dirpath,path);
+    char new_path[100], temp[100];
+    strcpy(new_path, path);
+    strcpy(temp, path);
+
+    char *token = strtok(temp, "/");
+    if (is_starts_with(path, "/pass")) {
+        int i = strlen(token) + 1;
+        atbash(new_path, i);
+        sprintf(fpath, "%s%s", dirpath, new_path);
+        // printf("new_path: %s\n", new_path);
+    } else {
+        sprintf(fpath, "%s%s", dirpath, path);
+    }
 
     res = lstat(fpath, stbuf);
 
@@ -25,10 +59,9 @@ static  int  xmp_getattr(const char *path, struct stat *stbuf)
     return 0;
 }
 
-
-
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
+    printf("xmp_readdir: %s\n", path);
     char fpath[1000];
 
     if(strcmp(path,"/") == 0)
@@ -55,7 +88,13 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
 
         st.st_ino = de->d_ino;
         st.st_mode = de->d_type << 12;
-        res = (filler(buf, de->d_name, &st, 0));
+        char name[100];
+        strcpy(name, de->d_name);
+        if (is_starts_with(path, "/pass")) {
+            // printf("path-readdir: %s\n", path);
+            atbash(name, 0);
+        }
+        res = (filler(buf, name, &st, 0));
 
         if(res!=0) break;
     }
@@ -65,10 +104,9 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
     return 0;
 }
 
-
-
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    printf("xmp_read\n");
     char fpath[1000];
     if(strcmp(path,"/") == 0)
     {
@@ -96,8 +134,23 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
     return res;
 }
 
+static int xmp_rename(const char *from, const char *to)
+{
+    printf("xmp_rename\n");
+    char ffrom[1000];
+    char fto[1000];
+    sprintf(ffrom, "%s%s", dirpath, from);
+    sprintf(fto, "%s%s", dirpath, to);
+    int res;
+    res = rename(ffrom, fto);
+    if (res == -1)
+        return -errno;
+    return 0;
+}
+
 static int xmp_mkdir(const char *path, mode_t mode) 
 {
+    printf("xmp_mkdir\n");
     int res;
     char fpath[1000];
 
@@ -112,6 +165,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 
 static int xmp_rmdir(const char *path)
 {
+    printf("xmp_rmdir\n");
     int res;
     char fpath[1000];
 
@@ -126,6 +180,7 @@ static int xmp_rmdir(const char *path)
 
 static int xmp_mknod(const char *path, mode_t mode, dev_t rdev) 
 {
+    printf("xmp_mknod\n");
     int res;
 
     if (S_ISREG(mode)) {
@@ -141,17 +196,9 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
     return 0;
 }
 
-static int xmp_rename(const char *from, const char *to)
-{
-    int res;
-    res = rename(from, to);
-    if (res == -1)
-        return -errno;
-    return 0;
-}
-
 static int xmp_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
+    printf("xmp_write\n");
     int fd;
     int res;
 
