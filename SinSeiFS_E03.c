@@ -12,13 +12,15 @@
 // static const char *dirpath = "/home/[user]/Donwloads";
 static const char *dirpath = "/home/iwandp/Downloads";
 
+// Fungsi untuk mengecek apakah string [parameter 1] 
+// dimulai dengan string [parameter 2]
 int is_starts_with(const char *a, const char *b)
 {
    if(strncmp(a, b, strlen(b)) == 0) return 1;
    return 0;
 }
 
-// Enkripsi dan dekripsi string
+// Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str){
     int i = 0;
     while(str[i]!='\0')
@@ -34,8 +36,8 @@ void atbash(char *str){
     }
 }
 
-// Function to return real path 
-// and do decription if path start with "AtoZ_"
+// Fungsi untuk return path asli
+// dan melakukan dekripsi jika path diawali dengan "AtoZ_"
 char *get_real_path(const char *path) {
     char *fpath = malloc (sizeof (char) * 1000);
     char real_path[100];
@@ -146,6 +148,9 @@ static int xmp_rename(const char *from, const char *to)
     return 0;
 }
 
+// Fungsi untuk return path asli saat operasi [mkdir]
+// dan melakukan dekripsi pada path folder (nama folder baru tidak didekripsi)
+// jika path diawali dengan "AtoZ_"
 char *get_real_path_mkdir(const char *path) {
     char *fpath = malloc (sizeof (char) * 1000);
     char real_path[100];
