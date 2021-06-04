@@ -14,11 +14,6 @@ static const char *dirpath = "/home/iwandp/Downloads";
 
 // Fungsi untuk mengecek apakah string [parameter 1] 
 // dimulai dengan string [parameter 2]
-int is_starts_with(const char *a, const char *b)
-{
-   if(strncmp(a, b, strlen(b)) == 0) return 1;
-   return 0;
-}
 
 // Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str){
@@ -42,17 +37,22 @@ void atbash(char *str){
 char *get_real_path(const char *path) {
     char *fpath = malloc (sizeof (char) * 1000);
     char real_path[100];
-
     strcpy(real_path, path);
-    if (is_starts_with(path, "/AtoZ_")) {
-        for (int i=1; i<strlen(path); i++) {
-            if (path[i] == '/'){
-                atbash(&real_path[i+1]);
+
+    char *str = strstr(real_path, "/AtoZ_");
+    if (str) {
+        int index = strlen(real_path) - strlen(str) + 1;
+        while (index < strlen(real_path)) {
+            if(real_path[index] == '/') {
+                atbash(&real_path[index]);
                 break;
             }
+            index++;
         }
+        sprintf(fpath, "%s%s", dirpath, real_path);
+    } else {
+        sprintf(fpath, "%s%s", dirpath, path);
     }
-    sprintf(fpath, "%s%s", dirpath, real_path);
     return fpath;
 }
 
@@ -92,7 +92,7 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
         st.st_mode = de->d_type << 12;
         char name[100];
         strcpy(name, de->d_name);
-        if (is_starts_with(path, "/AtoZ_")) {
+        if (strstr(path, "/AtoZ_")) {
             atbash(name);
         }
         res = (filler(buf, name, &st, 0));
@@ -149,38 +149,12 @@ static int xmp_rename(const char *from, const char *to)
     return 0;
 }
 
-// Fungsi untuk return path asli saat operasi [mkdir]
-// dan melakukan dekripsi pada path folder (nama folder baru tidak didekripsi)
-// jika path diawali dengan "AtoZ_"
-char *get_real_path_mkdir(const char *path) {
-    char *fpath = malloc (sizeof (char) * 1000);
-    char real_path[100];
-
-    strcpy(real_path, path);
-    if (is_starts_with(path, "/AtoZ_")) {
-        for (int i=1; i<strlen(path); i++) {
-            if (path[i] == '/') {
-                atbash(&real_path[i+1]);
-                break;
-            }
-        }
-        for (int i=strlen(path)-1; i>=4; i--) {
-            if (path[i] == '/'){
-                atbash(&real_path[i+1]);
-                break;
-            }
-        }
-    }
-    sprintf(fpath, "%s%s", dirpath, real_path);
-    return fpath;
-}
-
 static int xmp_mkdir(const char *path, mode_t mode) 
 {
     printf("xmp_mkdir\n");
     int res;
 
-    res = mkdir(get_real_path_mkdir(path), mode);
+    res = mkdir(get_real_path(path), mode);
 
     if (res==1)
         return -errno;
