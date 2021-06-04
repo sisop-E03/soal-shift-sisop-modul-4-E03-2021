@@ -25,6 +25,7 @@ void atbash(char *str){
     int i = 0;
     while(str[i]!='\0')
     {
+        if (str[i] == '.') break;
         if(!((str[i]>=0&&str[i]<65)||(str[i]>90&&str[i]<97)||(str[i]>122&&str[i]<=127)))
         {
             if(str[i]>='A'&&str[i]<='Z')
