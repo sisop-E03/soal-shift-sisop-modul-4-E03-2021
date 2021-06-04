@@ -1,6 +1,7 @@
 #define FUSE_USE_VERSION 28
 #include <fuse.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -17,8 +18,9 @@ int is_starts_with(const char *a, const char *b)
    return 0;
 }
 
-// Enkripsi dan dekripsi string mulai dari index ke-i 
-void atbash(char *str, int i){
+// Enkripsi dan dekripsi string
+void atbash(char *str){
+    int i = 0;
     while(str[i]!='\0')
     {
         if(!((str[i]>=0&&str[i]<65)||(str[i]>90&&str[i]<97)||(str[i]>122&&str[i]<=127)))
@@ -32,25 +34,31 @@ void atbash(char *str, int i){
     }
 }
 
+// Function to return real path 
+// and do decription if path start with "AtoZ_"
+char *get_real_path(const char *path) {
+    char *fpath = malloc (sizeof (char) * 1000);
+    char real_path[100];
+
+    strcpy(real_path, path);
+    if (is_starts_with(path, "/AtoZ_")) {
+        for (int i=1; i<strlen(path); i++) {
+            if (path[i] == '/'){
+                atbash(&real_path[i+1]);
+                break;
+            }
+        }
+    }
+    sprintf(fpath, "%s%s", dirpath, real_path);
+    return fpath;
+}
+
 static  int  xmp_getattr(const char *path, struct stat *stbuf)
 {
-    printf("xmp_getattr: %s\n", path);
     int res;
     char fpath[1000];
 
-    char new_path[100], temp[100];
-    strcpy(new_path, path);
-    strcpy(temp, path);
-
-    char *token = strtok(temp, "/");
-    if (is_starts_with(path, "/pass")) {
-        int i = strlen(token) + 1;
-        atbash(new_path, i);
-        sprintf(fpath, "%s%s", dirpath, new_path);
-        // printf("new_path: %s\n", new_path);
-    } else {
-        sprintf(fpath, "%s%s", dirpath, path);
-    }
+    strcpy(fpath, get_real_path(path));
 
     res = lstat(fpath, stbuf);
 
@@ -61,15 +69,6 @@ static  int  xmp_getattr(const char *path, struct stat *stbuf)
 
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-    printf("xmp_readdir: %s\n", path);
-    char fpath[1000];
-
-    if(strcmp(path,"/") == 0)
-    {
-        path=dirpath;
-        sprintf(fpath,"%s",path);
-    } else sprintf(fpath, "%s%s",dirpath,path);
-
     int res = 0;
 
     DIR *dp;
@@ -77,7 +76,7 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
     (void) offset;
     (void) fi;
 
-    dp = opendir(fpath);
+    dp = opendir(get_real_path(path));
 
     if (dp == NULL) return -errno;
 
@@ -90,9 +89,8 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
         st.st_mode = de->d_type << 12;
         char name[100];
         strcpy(name, de->d_name);
-        if (is_starts_with(path, "/pass")) {
-            // printf("path-readdir: %s\n", path);
-            atbash(name, 0);
+        if (is_starts_with(path, "/AtoZ_")) {
+            atbash(name);
         }
         res = (filler(buf, name, &st, 0));
 
@@ -148,15 +146,35 @@ static int xmp_rename(const char *from, const char *to)
     return 0;
 }
 
+char *get_real_path_mkdir(const char *path) {
+    char *fpath = malloc (sizeof (char) * 1000);
+    char real_path[100];
+
+    strcpy(real_path, path);
+    if (is_starts_with(path, "/AtoZ_")) {
+        for (int i=1; i<strlen(path); i++) {
+            if (path[i] == '/') {
+                atbash(&real_path[i+1]);
+                break;
+            }
+        }
+        for (int i=strlen(path)-1; i>=4; i--) {
+            if (path[i] == '/'){
+                atbash(&real_path[i+1]);
+                break;
+            }
+        }
+    }
+    sprintf(fpath, "%s%s", dirpath, real_path);
+    return fpath;
+}
+
 static int xmp_mkdir(const char *path, mode_t mode) 
 {
     printf("xmp_mkdir\n");
     int res;
-    char fpath[1000];
 
-    sprintf(fpath, "%s%s", dirpath, path);
-
-    res = mkdir(fpath, mode);
+    res = mkdir(get_real_path_mkdir(path), mode);
 
     if (res==1)
         return -errno;
