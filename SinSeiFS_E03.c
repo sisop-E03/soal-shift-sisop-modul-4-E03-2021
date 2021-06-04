@@ -12,9 +12,6 @@
 // static const char *dirpath = "/home/[user]/Donwloads";
 static const char *dirpath = "/home/iwandp/Downloads";
 
-// Fungsi untuk mengecek apakah string [parameter 1] 
-// dimulai dengan string [parameter 2]
-
 // Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str){
     int i = 0;
@@ -30,6 +27,14 @@ void atbash(char *str){
         } 
         i++;
     }
+}
+
+void write_log(char oldname[], char newname[]){
+    FILE *fp = fopen("encode.log", "a+");
+
+    fprintf(fp, "%s --> %s\n", oldname, newname);
+
+    fclose(fp); 
 }
 
 // Fungsi untuk return path asli
@@ -142,6 +147,10 @@ static int xmp_rename(const char *from, const char *to)
     char fto[1000];
     sprintf(ffrom, "%s%s", dirpath, from);
     sprintf(fto, "%s%s", dirpath, to);
+
+    if (strstr(to, "AtoZ_"))   
+        write_log(ffrom, fto);
+        
     int res;
     res = rename(ffrom, fto);
     if (res == -1)
@@ -153,8 +162,14 @@ static int xmp_mkdir(const char *path, mode_t mode)
 {
     printf("xmp_mkdir\n");
     int res;
+    char fpath[1000];
 
-    res = mkdir(get_real_path(path), mode);
+    strcpy(fpath, get_real_path(path));
+
+    if (strstr(fpath, "AtoZ_"))
+        write_log("No folder", fpath);
+
+    res = mkdir(fpath, mode);
 
     if (res==1)
         return -errno;
