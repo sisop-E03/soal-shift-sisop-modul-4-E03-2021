@@ -58,6 +58,17 @@ void write_log(char oldname[], char newname[])
     fclose(fp);
 }
 
+void write_log2(char method[], char oldname[], char newname[])
+{
+    FILE *fp = fopen("no2.log", "a+");
+
+    if(strcmp(method, "mkdir") == 0)
+        fprintf(fp, "%s %s\n", method, newname);
+    else if(strcmp(method, "rename") == 0)
+        fprintf(fp, "%s %s to %s\n", method, oldname, newname);
+    fclose(fp);
+}
+
 // Fungsi untuk return path asli
 // dan melakukan dekripsi jika path diawali dengan "AtoZ_" atau "RX_"
 char *get_real_path(const char *path)
@@ -200,6 +211,8 @@ static int xmp_rename(const char *from, const char *to)
 
     if (strstr(to, "AtoZ_"))
         write_log(ffrom, fto);
+    else if (strstr(to, "RX_"))
+        write_log2("rename", ffrom, fto);
 
     int res;
     res = rename(ffrom, fto);
@@ -218,6 +231,8 @@ static int xmp_mkdir(const char *path, mode_t mode)
 
     if (strstr(fpath, "AtoZ_"))
         write_log("No folder", fpath);
+    else if (strstr(fpath, "RX_"))
+        write_log2("mkdir", NULL, fpath);
 
     res = mkdir(fpath, mode);
 
