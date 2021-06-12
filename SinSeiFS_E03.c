@@ -13,6 +13,28 @@
 static const char *dirpath = "/home/rauf/Downloads";
 char *key = "SISOP";
 
+static const char *LOG = "/home/rauf/.SinSeiFS.log";
+char *leveli ="INFO";
+char *levelw ="WARNING";
+
+//untuk level warning rmdir dan unlink
+void Levellog(char *level, char* desc, const char* path) {
+	FILE *file_log = fopen(LOG, "a");
+
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+
+	int tahun = tm.tm_year+1900;
+	int bulan = tm.tm_mon+1;
+	int hari = tm.tm_mday;
+	int jam = tm.tm_hour;
+	int menit = tm.tm_min;
+	int detik = tm.tm_sec;
+
+	fprintf(file_log, "%s::%d%d%d-%02d:%02d:%02d::%s::%s\n", level, hari, bulan, tahun, jam, menit, detik, desc, path);
+	fclose(file_log);
+}
+
 // Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str)
 {
@@ -226,6 +248,9 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
     if (res == -1)
         return -errno;
 
+    //bikin lognya
+    Levellog(leveli, "LS", fpath);
+
     return 0;
 }
 
@@ -278,6 +303,10 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
 
     closedir(dp);
 
+    //bikin lognya
+    Levellog(leveli, "CD", path);
+
+
     return 0;
 }
 
@@ -305,6 +334,9 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
 
     close(fd);
 
+    //bikin lognya
+    Levellog(leveli, "READ", fpath);
+
     return res;
 }
 
@@ -325,6 +357,10 @@ static int xmp_rename(const char *from, const char *to)
     res = rename(ffrom, fto);
     if (res == -1)
         return -errno;
+
+    //bikin lognya
+    Levellog(leveli, "MOVE", ffrom);
+
     return 0;
 }
 
@@ -345,6 +381,10 @@ static int xmp_mkdir(const char *path, mode_t mode)
 
     if (res == 1)
         return -errno;
+
+    //bikin lognya BUAT NO 4
+    Levellog(leveli, "MKDIR", fpath);
+
     return 0;
 }
 
@@ -360,6 +400,10 @@ static int xmp_rmdir(const char *path)
 
     if (res == 1)
         return -errno;
+
+    //untuk di log no4
+    Levellog(levelw, "RMDIR", fpath);
+
     return 0;
 }
 
@@ -380,6 +424,10 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
         res = mknod(path, mode, rdev);
     if (res == -1)
         return -errno;
+
+    //untuk di log no4
+    Levellog(leveli, "CREATE", path);
+
     return 0;
 }
 
@@ -399,6 +447,10 @@ static int xmp_write(const char *path, const char *buf, size_t size, off_t offse
         res = -errno;
 
     close(fd);
+
+    //untuk di log no4
+    Levellog(leveli, "WRITE", path);
+
     return res;
 }
 
