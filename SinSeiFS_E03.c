@@ -11,6 +11,7 @@
 
 // static const char *dirpath = "/home/[user]/Donwloads";
 static const char *dirpath = "/home/rauf/Downloads";
+char *key = "SISOP";
 
 // Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str)
@@ -49,6 +50,59 @@ void rot13(char *str)
     }
 }
 
+void encryptViginere(char *str)
+{
+    int i = 0;
+    int j = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {  
+        if(str[i] == '/')
+        {
+            i++;
+            j = 0;
+            continue;
+        }
+        else if(str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) + (key[j % strlen(key)] - 65)) % 26 + 65;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) + (key[j % strlen(key)] - 65)) % 26 + 97;
+        }
+
+        j++;
+        i++;
+    }
+}
+
+void decryptViginere(char *str)
+{
+    int i = 0;
+    int j = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {
+        if(str[i] == '/')
+        {
+            i++;
+            j = 0;
+            continue;
+        }
+        else if (str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) - (key[j % strlen(key)] - 65) + 26) % 26 + 65;
+            j++;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) - (key[j % strlen(key)] - 65) + 26) % 26 + 97;
+            j++;
+        }
+
+        i++;
+    }
+}
+
 void write_log(char oldname[], char newname[])
 {
     FILE *fp = fopen("encode.log", "a+");
@@ -62,11 +116,45 @@ void write_log2(char method[], char oldname[], char newname[])
 {
     FILE *fp = fopen("no2.log", "a+");
 
-    if(strcmp(method, "mkdir") == 0)
+    if (strcmp(method, "mkdir") == 0)
         fprintf(fp, "%s %s\n", method, newname);
-    else if(strcmp(method, "rename") == 0)
+    else if (strcmp(method, "rename") == 0)
         fprintf(fp, "%s %s to %s\n", method, oldname, newname);
     fclose(fp);
+}
+
+int cek_log2(char *str)
+{
+    char line[1000];
+
+    FILE *fp = fopen("no2.log", "r");
+
+    while (fgets(line, sizeof(line), fp))
+    {
+        if (strncmp(line, "rename", 6))
+        {
+            continue;
+        }
+
+        line[strcspn(line, "\n")] = '\0';
+        char *path = strrchr(line, ' ') + 1;
+        char *name = strstr(path, "/RX_");
+
+        if (!name)
+        {
+            continue;
+        }
+
+        char name2[1000];
+        strcpy(name2, str);
+
+        if (!strcmp(strtok(name, "/"), strtok(name2, "/")))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 // Fungsi untuk return path asli
@@ -98,10 +186,20 @@ char *get_real_path(const char *path)
         int index = strlen(real_path) - strlen(rx) + 1;
         while (index < strlen(real_path))
         {
+
             if (real_path[index] == '/')
             {
-                rot13(&real_path[index]);
-                atbash(&real_path[index]);
+                if (cek_log2(rx))
+                {
+                    decryptViginere(&real_path[index]);
+                    atbash(&real_path[index]);
+                }
+                else
+                {
+                    rot13(&real_path[index]);
+                    atbash(&real_path[index]);
+                }
+
                 break;
             }
             index++;
@@ -158,10 +256,19 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
         if (strstr(path, "/AtoZ_"))
         {
             atbash(name);
-        } else if (strstr(path, "/RX_"))
+        }
+        else if (strstr(path, "/RX_"))
         {
-            atbash(name);
-            rot13(name);
+            if (cek_log2(strstr(path, "/RX_")))
+            {
+                atbash(name);
+                encryptViginere(name);
+            }
+            else
+            {
+                atbash(name);
+                rot13(name);
+            }
         }
         res = (filler(buf, name, &st, 0));
 
