@@ -19,7 +19,63 @@ Referensi : https://www.dcode.fr/atbash-cipher``
 - e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
 
 ### Penyelesaian
+Jika sebuah direktori dibuat dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.Jika sebuah direktori di-rename dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
+```c
+// Enkripsi dan dekripsi string menggunakan atbash
+void atbash(char *str)
+{
+    int i = 0;
+    while (str[i] != '\0')
+    {
+        if (str[i] == '.')
+            break;
+        if (!((str[i] >= 0 && str[i] < 65) || (str[i] > 90 && str[i] < 97) || (str[i] > 122 && str[i] <= 127)))
+        {
+            if (str[i] >= 'A' && str[i] <= 'Z')
+                str[i] = 'Z' + 'A' - str[i];
+            if (str[i] >= 'a' && str[i] <= 'z')
+                str[i] = 'z' + 'a' - str[i];
+        }
+        i++;
+    }
+}
 
+void rot13(char *str)
+{
+    int i = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {
+        if (str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) + 13) % 26 + 65;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) + 13) % 26 + 97;
+        }
+
+        i++;
+    }
+}
+
+```
+
+Apabila direktori yang terenkripsi di-rename menjadi tidak ter-encode, maka isi direktori tersebut akan terdecode.
+
+Setiap pembuatan direktori ter-encode (mkdir atau rename) akan tercatat ke sebuah log. Format : /home/[USER]/Downloads/[Nama Direktori] → /home/[USER]/Downloads/AtoZ_[Nama Direktori]
+```c
+void write_log2(char method[], char oldname[], char newname[])
+{
+    FILE *fp = fopen("no2.log", "a+");
+
+    if (strcmp(method, "mkdir") == 0)
+        fprintf(fp, "%s %s\n", method, newname);
+    else if (strcmp(method, "rename") == 0)
+        fprintf(fp, "%s %s to %s\n", method, oldname, newname);
+    fclose(fp);
+}
+```
+- e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
 
 ## NO 2
 Selain itu Sei mengusulkan untuk membuat metode enkripsi tambahan agar data pada komputer mereka semakin aman. Berikut rancangan metode enkripsi tambahan yang dirancang oleh Sei
@@ -213,7 +269,6 @@ char *get_real_path(const char *path)
 ```
 Di fungsi `get_real_path` yang juga digunakan di soal 1, ditambahkan pengecekan apabila `path` mengandung substring `/RX_`. Bila iya, maka akan kembali dicek dengan fungsi `cek_log2` apa path tersebut dibuat dengan rename atau mkdir, bila iya maka akan dilakukan dekripsi menggunakan vigenere dan atbash. Bila tidak, maka akan menggunakan rot13 dan atbash. Terakhir, `dirpath` dan `real_path` disambungkan di `fpath`.
 
-```c
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
     ...
@@ -269,10 +324,10 @@ Terakhir untuk 2d, di fungsi `xmp_rename` dan `xmp_mkdir` juga dilakukan pengece
 
 Untuk soal 2e tidak dikerjakan.
 
-![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.png)
+![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.jpg)
 Folder dan file di dalam folder RX_coba di direktori Downloads
 
-![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.png)
+![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.jpg)
 Folder dan file di dalam folder RX_coba di folder mount program
 
 ### Kendala
