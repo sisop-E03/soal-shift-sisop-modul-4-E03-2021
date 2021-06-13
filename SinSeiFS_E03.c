@@ -151,6 +151,10 @@ int cek_log2(char *str)
 
     FILE *fp = fopen("no2.log", "r");
 
+    if(!fp) {
+        return 0;
+    }
+
     while (fgets(line, sizeof(line), fp))
     {
         if (strncmp(line, "rename", 6))
@@ -345,8 +349,8 @@ static int xmp_rename(const char *from, const char *to)
     printf("xmp_rename\n");
     char ffrom[1000];
     char fto[1000];
-    sprintf(ffrom, "%s%s", dirpath, from);
-    sprintf(fto, "%s%s", dirpath, to);
+    strcpy(ffrom, get_real_path(from));
+        strcpy(fto, get_real_path(to));
 
     if (strstr(to, "AtoZ_"))
         write_log(ffrom, fto);
@@ -394,7 +398,7 @@ static int xmp_rmdir(const char *path)
     int res;
     char fpath[1000];
 
-    sprintf(fpath, "%s%s", dirpath, path);
+    strcpy(fpath, get_real_path(path));
 
     res = rmdir(fpath);
 
@@ -412,33 +416,37 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev)
     printf("xmp_mknod\n");
     int res;
 
+    char fpath[1000];
+
+    strcpy(fpath, get_real_path(path));
+
     if (S_ISREG(mode))
     {
-        res = open(path, O_CREAT | O_EXCL | O_WRONLY, mode);
+        res = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (res >= 0)
             res = close(res);
     }
     else if (S_ISFIFO(mode))
-        res = mkfifo(path, mode);
+        res = mkfifo(fpath, mode);
     else
-        res = mknod(path, mode, rdev);
+        res = mknod(fpath, mode, rdev);
     if (res == -1)
         return -errno;
 
     //untuk di log no4
-    Levellog(leveli, "CREATE", path);
+    Levellog(leveli, "CREATE", fpath);
 
     return 0;
 }
 
-static int xmp_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
+static int xmp_write(const char *fpath, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     printf("xmp_write\n");
     int fd;
     int res;
 
     (void)fi;
-    fd = open(path, O_WRONLY);
+    fd = open(fpath, O_WRONLY);
     if (fd == -1)
         return -errno;
 
@@ -449,7 +457,7 @@ static int xmp_write(const char *path, const char *buf, size_t size, off_t offse
     close(fd);
 
     //untuk di log no4
-    Levellog(leveli, "WRITE", path);
+    Levellog(leveli, "WRITE", fpath);
 
     return res;
 }
