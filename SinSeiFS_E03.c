@@ -13,7 +13,7 @@
 static const char *dirpath = "/home/rauf/Downloads";
 char *key = "SISOP";
 
-static const char *LOG = "/home/rauf/.SinSeiFS.log";
+static const char *LOG = "/home/rauf/SinSeiFS.log";
 char *leveli ="INFO";
 char *levelw ="WARNING";
 
