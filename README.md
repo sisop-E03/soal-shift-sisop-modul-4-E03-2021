@@ -68,9 +68,8 @@ char *levelw ="WARNING";``
 
 lalu `void Levellog` berisi format log yang akan masukkan ke dalam file di SinSeiFS.log
 waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``
-`` void Levellog(char *level, char* desc, const char* path) {
+``` void Levellog(char *level, char* desc, const char* path) {
 	FILE *file_log = fopen(LOG, "a");
-
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
 
@@ -83,7 +82,7 @@ waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm 
 
 	fprintf(file_log, "%s::%d%d%d-%02d:%02d:%02d::%s::%s\n", level, hari, bulan, tahun, jam, menit, detik, desc, path);
 	fclose(file_log);
-}``
+}```
 
 dan contoh memanggil lognya :
 - untuk level info-->
