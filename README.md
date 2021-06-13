@@ -19,9 +19,7 @@ Referensi : https://www.dcode.fr/atbash-cipher``
 - e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
 
 ### Penyelesaian
-Jika sebuah direktori dibuat dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.Jika sebuah direktori di-rename dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
 ```c
-// Enkripsi dan dekripsi string menggunakan atbash
 void atbash(char *str)
 {
     int i = 0;
@@ -39,43 +37,148 @@ void atbash(char *str)
         i++;
     }
 }
-
-void rot13(char *str)
-{
-    int i = 0;
-    while (str[i] != '\0' && str[i] != '.')
-    {
-        if (str[i] >= 'A' && str[i] <= 'Z')
-        {
-            str[i] = ((str[i] - 65) + 13) % 26 + 65;
-        }
-        else if (str[i] >= 'a' && str[i] <= 'z')
-        {
-            str[i] = ((str[i] - 97) + 13) % 26 + 97;
-        }
-
-        i++;
-    }
-}
-
 ```
+Fungsi atbash akan melakukan enkripsi dan dekripsi string. Saat melakukan enkripsi atau dekripsi pada file, fungsi akan berhenti saat menemui karakter '.' yang berarti string pada nama extensi file tidak dilakukan enkripsi.
 
-Apabila direktori yang terenkripsi di-rename menjadi tidak ter-encode, maka isi direktori tersebut akan terdecode.
-
-Setiap pembuatan direktori ter-encode (mkdir atau rename) akan tercatat ke sebuah log. Format : /home/[USER]/Downloads/[Nama Direktori] → /home/[USER]/Downloads/AtoZ_[Nama Direktori]
 ```c
-void write_log2(char method[], char oldname[], char newname[])
+char *get_real_path(const char *path)
 {
-    FILE *fp = fopen("no2.log", "a+");
+    char *fpath = malloc(sizeof(char) * 1000);
+    char real_path[100];
+    strcpy(real_path, path);
 
-    if (strcmp(method, "mkdir") == 0)
-        fprintf(fp, "%s %s\n", method, newname);
-    else if (strcmp(method, "rename") == 0)
-        fprintf(fp, "%s %s to %s\n", method, oldname, newname);
-    fclose(fp);
+    char *str = strstr(real_path, "/AtoZ_");
+    ...
+    if (str)
+    {
+        int index = strlen(real_path) - strlen(str) + 1;
+        while (index < strlen(real_path))
+        {
+            if (real_path[index] == '/')
+            {
+                atbash(&real_path[index]);
+                break;
+            }
+            index++;
+        }
+        sprintf(fpath, "%s%s", dirpath, real_path);
+    }
+    ...
+    else
+    {
+        sprintf(fpath, "%s%s", dirpath, path);
+    }
+
+    return fpath;
 }
 ```
-- e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
+Fungsi ini akan mencari real path yang disimpan pada FS yang sebenarnya. 
+Jika pada path terdapat substring '/AtoZ_', berarti didalam path tersebut akan dilakukan enkripsi atau dekripsi dengan atbash dimulai dari file/folder didalam folder yang memiliki nama 'AtoZ_'.  Lalu path tersebut akan digabungkan dengan dirpath dan dilakukan return.
+
+```c
+static int xmp_getattr(const char *path, struct stat *stbuf)
+{
+    int res;
+    char fpath[1000];
+
+    strcpy(fpath, get_real_path(path));
+
+    res = lstat(fpath, stbuf);
+
+    if (res == -1)
+        return -errno;
+
+    //bikin lognya
+    Levellog(leveli, "LS", fpath);
+
+    return 0;
+}
+```
+Saat getattr() fungsi akan melakukan lstat() pada path yang sudah diproses oleh fungsi get_real_path().
+
+```c
+static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
+{
+    int res = 0;
+
+    DIR *dp;
+    struct dirent *de;
+    (void)offset;
+    (void)fi;
+
+    dp = opendir(get_real_path(path));
+
+    if (dp == NULL)
+        return -errno;
+
+    while ((de = readdir(dp)) != NULL)
+    {
+        struct stat st;
+
+        memset(&st, 0, sizeof(st));
+
+        st.st_ino = de->d_ino;
+        st.st_mode = de->d_type << 12;
+        char name[100];
+        strcpy(name, de->d_name);
+        if (strstr(path, "/AtoZ_"))
+        {
+            atbash(name);
+        }
+        else if (strstr(path, "/RX_"))
+        {
+            if (cek_log2(strstr(path, "/RX_")))
+            {
+                atbash(name);
+                encryptViginere(name);
+            }
+            ...
+        }
+        res = (filler(buf, name, &st, 0));
+
+        if (res != 0)
+            break;
+    }
+
+    closedir(dp);
+
+    //bikin lognya
+    Levellog(leveli, "CD", path);
+
+
+    return 0;
+}
+```
+Fungsi readdir akan membaca directory path yang sudah melewati pemrosesan fungsi get_real_path(). Lalu untuk nama file/folder yang akan dibaca, jika pada path terdapat substring 'AtoZ_' maka akan dilakukan enkripsi pada nama tersebut. 
+
+```c
+static int xmp_mkdir(const char *path, mode_t mode)
+{
+    printf("xmp_mkdir\n");
+    int res;
+    char fpath[1000];
+
+    strcpy(fpath, get_real_path(path));
+
+    if (strstr(fpath, "AtoZ_"))
+        write_log("No folder", fpath);
+    ...
+
+    res = mkdir(fpath, mode);
+
+    if (res == 1)
+        return -errno;
+
+    //bikin lognya BUAT NO 4
+    Levellog(leveli, "MKDIR", fpath);
+
+    return 0;
+}
+```
+Saat melakukan pembuatan folder, nama folder yang akan dibuat adalah path yang sudah diproses melalui get_real_path() function. Lalu jika pada path tersebut memiliki substring 'AtoZ_' maka akan dilakukan pencatatan log.
+
+### Kendala:
+1. Dokumentas FUSE yang tersedia di internet minimal, begitu pula programmer yang sharing code pada blog, stackoverflow, dll.
 
 ## NO 2
 Selain itu Sei mengusulkan untuk membuat metode enkripsi tambahan agar data pada komputer mereka semakin aman. Berikut rancangan metode enkripsi tambahan yang dirancang oleh Sei
@@ -324,10 +427,10 @@ Terakhir untuk 2d, di fungsi `xmp_rename` dan `xmp_mkdir` juga dilakukan pengece
 
 Untuk soal 2e tidak dikerjakan.
 
-![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.png)
+![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.jpg)
 Folder dan file di dalam folder RX_coba di direktori Downloads
 
-![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.png)
+![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.jpg)
 Folder dan file di dalam folder RX_coba di folder mount program
 
 ### Kendala
