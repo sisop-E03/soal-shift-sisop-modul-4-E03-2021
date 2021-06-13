@@ -67,8 +67,9 @@ INFO::28052021-10:01:00:RENAME::/test.txt::/rename.txt
 char *levelw ="WARNING";``
 
 lalu `void Levellog` berisi format log yang akan masukkan ke dalam file di SinSeiFS.log
-waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``
-``` void Levellog(char *level, char* desc, const char* path) {
+waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``. isi oid Levellog adala sebagi berikut:
+```c
+void Levellog(char *level, char* desc, const char* path) {
 	FILE *file_log = fopen(LOG, "a");
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
@@ -86,10 +87,12 @@ waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm 
 
 dan contoh memanggil lognya :
 - untuk level info-->
-``//bikin lognya
-    Levellog(leveli, "CD", path);``
+```c
+//bikin lognya
+    Levellog(leveli, "CD", path);```
 - untuk level warning -->
-``//untuk di log no4
+```c
+//untuk di log no4
     Levellog(levelw, "RMDIR", fpath);``
 
 
