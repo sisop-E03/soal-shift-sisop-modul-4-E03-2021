@@ -12,22 +12,22 @@ Note : filesystem berfungsi normal layaknya linux pada umumnya, Mount source (ro
 Referensi : https://www.dcode.fr/atbash-cipher``
 
 
-a. Jika sebuah direktori dibuat dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
-b. Jika sebuah direktori di-rename dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
-c. Apabila direktori yang terenkripsi di-rename menjadi tidak ter-encode, maka isi direktori tersebut akan terdecode.
-d. Setiap pembuatan direktori ter-encode (mkdir atau rename) akan tercatat ke sebuah log. Format : /home/[USER]/Downloads/[Nama Direktori] → /home/[USER]/Downloads/AtoZ_[Nama Direktori]
-e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
+- a. Jika sebuah direktori dibuat dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
+- b. Jika sebuah direktori di-rename dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
+- c. Apabila direktori yang terenkripsi di-rename menjadi tidak ter-encode, maka isi direktori tersebut akan terdecode.
+- d. Setiap pembuatan direktori ter-encode (mkdir atau rename) akan tercatat ke sebuah log. Format : /home/[USER]/Downloads/[Nama Direktori] → /home/[USER]/Downloads/AtoZ_[Nama Direktori]
+- e. Metode encode pada suatu direktori juga berlaku terhadap direktori yang ada di dalamnya.(rekursif)
 
 ### Penyelesaian
 
 
 ## NO 2
 Selain itu Sei mengusulkan untuk membuat metode enkripsi tambahan agar data pada komputer mereka semakin aman. Berikut rancangan metode enkripsi tambahan yang dirancang oleh Sei
-a. Jika sebuah direktori dibuat dengan awalan “RX_[Nama]”, maka direktori tersebut akan menjadi direktori terencode beserta isinya dengan perubahan nama isi sesuai kasus nomor 1  dengan algoritma tambahan ROT13 (Atbash + ROT13).
-b. Jika sebuah direktori di-rename dengan awalan “RX_[Nama]”, maka direktori tersebut akan menjadi direktori terencode beserta isinya dengan perubahan nama isi sesuai dengan kasus nomor 1 dengan algoritma tambahan Vigenere Cipher dengan key “SISOP” (Case-sensitive, Atbash + Vigenere).
-c. Apabila direktori yang terencode di-rename (Dihilangkan “RX_” nya), maka folder menjadi tidak terencode dan isi direktori tersebut akan terdecode berdasar nama aslinya.
-d. Setiap pembuatan direktori terencode (mkdir atau rename) akan tercatat ke sebuah log file beserta methodnya (apakah itu mkdir atau rename).
-e. Pada metode enkripsi ini, file-file pada direktori asli akan menjadi terpecah menjadi file-file kecil sebesar 1024 bytes, sementara jika diakses melalui filesystem rancangan Sin dan Sei akan menjadi normal. Sebagai contoh, Suatu_File.txt berukuran 3 kiloBytes pada directory asli akan menjadi 3 file kecil yakni:
+- a. Jika sebuah direktori dibuat dengan awalan “RX_[Nama]”, maka direktori tersebut akan menjadi direktori terencode beserta isinya dengan perubahan nama isi sesuai kasus nomor 1  dengan algoritma tambahan ROT13 (Atbash + ROT13).
+- b. Jika sebuah direktori di-rename dengan awalan “RX_[Nama]”, maka direktori tersebut akan menjadi direktori terencode beserta isinya dengan perubahan nama isi sesuai dengan kasus nomor 1 dengan algoritma tambahan Vigenere Cipher dengan key “SISOP” (Case-sensitive, Atbash + Vigenere).
+- c. Apabila direktori yang terencode di-rename (Dihilangkan “RX_” nya), maka folder menjadi tidak terencode dan isi direktori tersebut akan terdecode berdasar nama aslinya.
+- d. Setiap pembuatan direktori terencode (mkdir atau rename) akan tercatat ke sebuah log file beserta methodnya (apakah itu mkdir atau rename).
+- e. Pada metode enkripsi ini, file-file pada direktori asli akan menjadi terpecah menjadi file-file kecil sebesar 1024 bytes, sementara jika diakses melalui filesystem rancangan Sin dan Sei akan menjadi normal. Sebagai contoh, Suatu_File.txt berukuran 3 kiloBytes pada directory asli akan menjadi 3 file kecil yakni:
 
 ``Suatu_File.txt.0000
 Suatu_File.txt.0001
@@ -283,11 +283,11 @@ Folder dan file di dalam folder RX_coba di folder mount program
 
 ## NO 4
 Untuk memudahkan dalam memonitor kegiatan pada filesystem mereka Sin dan Sei membuat sebuah log system dengan spesifikasi sebagai berikut.
-a. Log system yang akan terbentuk bernama “SinSeiFS.log” pada direktori home pengguna (/home/[user]/SinSeiFS.log). Log system ini akan menyimpan daftar perintah system call yang telah dijalankan pada filesystem.
-b. Karena Sin dan Sei suka kerapian maka log yang dibuat akan dibagi menjadi dua level, yaitu INFO dan WARNING.
-c. Untuk log level WARNING, digunakan untuk mencatat syscall rmdir dan unlink.
-d. Sisanya, akan dicatat pada level INFO.
-e. Format untuk logging yaitu:
+- a. Log system yang akan terbentuk bernama “SinSeiFS.log” pada direktori home pengguna (/home/[user]/SinSeiFS.log). Log system ini akan menyimpan daftar perintah system call yang telah dijalankan pada filesystem.
+- b. Karena Sin dan Sei suka kerapian maka log yang dibuat akan dibagi menjadi dua level, yaitu INFO dan WARNING.
+- c. Untuk log level WARNING, digunakan untuk mencatat syscall rmdir dan unlink.
+- d. Sisanya, akan dicatat pada level INFO.
+- e. Format untuk logging yaitu:
 
 
 [Level]::[dd][mm][yyyy]-[HH]:[MM]:[SS]:[CMD]::[DESC :: DESC]
@@ -308,33 +308,36 @@ INFO::28052021-10:01:00:RENAME::/test.txt::/rename.txt
 char *levelw ="WARNING";``
 
 lalu `void Levellog` berisi format log yang akan masukkan ke dalam file di SinSeiFS.log
-waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``. isi oid Levellog adala sebagi berikut:
+waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``. isi void Levellog adala sebagi berikut:
 ```c
-void Levellog(char *level, char* desc, const char* path) {
+void Levellog(char *level, char* desc, const char* path) 
+{
 	FILE *file_log = fopen(LOG, "a");
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
-
 	int tahun = tm.tm_year+1900;
 	int bulan = tm.tm_mon+1;
 	int hari = tm.tm_mday;
 	int jam = tm.tm_hour;
 	int menit = tm.tm_min;
 	int detik = tm.tm_sec;
-
 	fprintf(file_log, "%s::%d%d%d-%02d:%02d:%02d::%s::%s\n", level, hari, bulan, tahun, jam, menit, detik, desc, path);
 	fclose(file_log);
-}```
+}
+```
 
 dan contoh memanggil lognya :
 - untuk level info-->
 ```c
 //bikin lognya
-    Levellog(leveli, "CD", path);```
+    Levellog(leveli, "CD", path);
+```
+
 - untuk level warning -->
 ```c
 //untuk di log no4
-    Levellog(levelw, "RMDIR", fpath);```
+    Levellog(levelw, "RMDIR", fpath);
+```
 
 
 ![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no%204.jpg)
