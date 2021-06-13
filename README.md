@@ -177,8 +177,17 @@ static int xmp_mkdir(const char *path, mode_t mode)
 ```
 Saat melakukan pembuatan folder, nama folder yang akan dibuat adalah path yang sudah diproses melalui get_real_path() function. Lalu jika pada path tersebut memiliki substring 'AtoZ_' maka akan dilakukan pencatatan log.
 
+### Hasil
+Folder pada Downloads
+
+![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/1a.png)
+
+Folder pada file system yang dibuat
+
+![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/1b.png)
+
 ### Kendala:
-1. Dokumentas FUSE yang tersedia di internet minimal, begitu pula programmer yang sharing code pada blog, stackoverflow, dll.
+1. Dokumentas FUSE yang tersedia di internet sedikit, begitu pula programmer yang sharing code pada blog, stackoverflow, dll.
 
 ## NO 2
 Selain itu Sei mengusulkan untuk membuat metode enkripsi tambahan agar data pada komputer mereka semakin aman. Berikut rancangan metode enkripsi tambahan yang dirancang oleh Sei
@@ -427,10 +436,10 @@ Terakhir untuk 2d, di fungsi `xmp_rename` dan `xmp_mkdir` juga dilakukan pengece
 
 Untuk soal 2e tidak dikerjakan.
 
-![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.jpg)
+![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.png)
 Folder dan file di dalam folder RX_coba di direktori Downloads
 
-![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.jpg)
+![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.png)
 Folder dan file di dalam folder RX_coba di folder mount program
 
 ### Kendala
