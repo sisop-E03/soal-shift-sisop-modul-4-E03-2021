@@ -96,3 +96,4 @@ dan contoh memanggil lognya :
     Levellog(levelw, "RMDIR", fpath);``
 
 
+![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/no%204.jpg)
