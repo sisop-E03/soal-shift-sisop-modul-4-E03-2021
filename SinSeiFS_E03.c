@@ -215,7 +215,7 @@ char *get_real_path(const char *path)
 
             if (real_path[index] == '/')
             {
-                if (cek_log2(rx))
+                if (cek_log2(real_path))
                 {
                     decryptViginere(&real_path[index]);
                     atbash(&real_path[index]);

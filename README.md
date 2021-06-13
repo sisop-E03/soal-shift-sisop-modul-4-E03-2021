@@ -36,6 +36,247 @@ Suatu_File.txt.0002``
 Ketika diakses melalui filesystem hanya akan muncul Suatu_File.txt
 
 ### Penyelesaian
+Karena soal 1 dan 2 ada beberapa kesamaan, maka solusi dari soal 1 dapat dimodifikasi untuk menyelesaikan soal 2. Pertama, fungsi-fungsi untuk enkripsi dan dekripsi tambahan dibuat terlebih dahulu.
+
+```c
+void rot13(char *str)
+{
+    int i = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {
+        if (str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) + 13) % 26 + 65;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) + 13) % 26 + 97;
+        }
+
+        i++;
+    }
+}
+```
+Fungsi `rot13` akan melakukan looping setiap karakter sampai ditemukan null terminator atau tanda titik. Kemudian bila karakter saat ini berupa huruf, maka huruf tersebut akan digeser 13 kali. Enkripsi ini bersifat simetris sehingga dapat digunakan juga untuk dekripsi. Fungsi ini akan digunakan untuk soal 2a
+
+```c
+void encryptViginere(char *str)
+{
+    int i = 0;
+    int j = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {  
+        if(str[i] == '/')
+        {
+            i++;
+            j = 0;
+            continue;
+        }
+        else if(str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) + (key[j % strlen(key)] - 65)) % 26 + 65;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) + (key[j % strlen(key)] - 65)) % 26 + 97;
+        }
+
+        j++;
+        i++;
+    }
+}
+```
+Mirip seperti `rot13`, fungsi `encryptViginere` akan melakukan looping setiap karakter sampai ditemukan null terminator atau tanda titik. BIla karakter saat ini huruf, huruf tersebut akan digeser sesuai dengan karakter di index kunci saat ini kemudian index kunci akan bergeser 1. Apabila karakter saat ini slash, maka karakter dilompati dan index kunci direset. 
+
+```c
+void decryptViginere(char *str)
+{
+    int i = 0;
+    int j = 0;
+    while (str[i] != '\0' && str[i] != '.')
+    {
+        if(str[i] == '/')
+        {
+            i++;
+            j = 0;
+            continue;
+        }
+        else if (str[i] >= 'A' && str[i] <= 'Z')
+        {
+            str[i] = ((str[i] - 65) - (key[j % strlen(key)] - 65) + 26) % 26 + 65;
+            j++;
+        }
+        else if (str[i] >= 'a' && str[i] <= 'z')
+        {
+            str[i] = ((str[i] - 97) - (key[j % strlen(key)] - 65) + 26) % 26 + 97;
+            j++;
+        }
+
+        i++;
+    }
+}
+```
+Cara kerja fungsi `decryptViginere` mirip dengan `encryptViginere`, hanya saja hurufnya digeser ke arah kebalikannya. Artinya, karena di enkripsi nilai hurufnya ditambah, di dekripsi nilai hurufnya dikurangi. Fungsi `decryptViginere` dan `encryptViginere` akan digunakan untuk soal 2b.
+
+```c
+void write_log2(char method[], char oldname[], char newname[])
+{
+    FILE *fp = fopen("no2.log", "a+");
+
+    if (strcmp(method, "mkdir") == 0)
+        fprintf(fp, "%s %s\n", method, newname);
+    else if (strcmp(method, "rename") == 0)
+        fprintf(fp, "%s %s to %s\n", method, oldname, newname);
+    fclose(fp);
+}
+```
+Kemudian, soal untuk menuliskan log bila melakukan `mkdir` dan `rename` juga dibuat. Fungsi `write_log2` akan menerima argumen method, nama lama, dan nama baru. Kemudian argumen tadi akan ditulis ke file `no2.log`. Fungsi ini selain digunakan untuk soal 2d, tapi juga 2a dan 2b.
+
+```c
+int cek_log2(char *str)
+{
+    char line[1000];
+
+    FILE *fp = fopen("no2.log", "r");
+
+    if(!fp) {
+        return 0;
+    }
+
+    while (fgets(line, sizeof(line), fp))
+    {
+        if (strncmp(line, "rename", 6))
+        {
+            continue;
+        }
+
+        line[strcspn(line, "\n")] = '\0';
+        char *path = strrchr(line, ' ') + 1;
+        char *name = strstr(path, "/RX_");
+
+        if (!name)
+        {
+            continue;
+        }
+
+        char name2[1000];
+        strcpy(name2, str);
+
+        if (!strcmp(strtok(name, "/"), strtok(name2, "/")))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+```
+Fungsi `cek_log2` akan mengecek apakah sebuah folder dibuat dengan rename atau mkdir dengan cara membaca file `no2.log`. File tersebut akan dibaca baris per baris, kemudian dibandingkan 6 karakter pertamanya dengan `rename`, jika tidak sama maka akan melanjutkan ke baris berikutnya. Kemudian fungsi akan mengecek apakah path hasil rename mengandung `RX_`, jika tidak maka juga akan melanjutkan ke baris berikutnya. Terakhir, argumen yang diterima akan dibandingkan dengan nama folder dari log, bila sama maka akan fungsi mengembalikan nilai 1 yang artinya folder dibuat dengan rename. Jika file `no2.log` tidak ada atau sampai baris akhir tidak ditemukan nama folder yang sama, maka fungsi mengembalikan nilai 0. Fungsi ini akan digunakan di soal 2a dan 2b.
+
+```c
+char *get_real_path(const char *path)
+{
+    ...
+
+    char *rx = strstr(real_path, "/RX_");
+    
+	...
+
+    else if (rx)
+    {
+        int index = strlen(real_path) - strlen(rx) + 1;
+        while (index < strlen(real_path))
+        {
+
+            if (real_path[index] == '/')
+            {
+                if (cek_log2(real_path))
+                {
+                    decryptViginere(&real_path[index]);
+                    atbash(&real_path[index]);
+                }
+                else
+                {
+                    rot13(&real_path[index]);
+                    atbash(&real_path[index]);
+                }
+
+                break;
+            }
+            index++;
+        }
+        sprintf(fpath, "%s%s", dirpath, real_path);
+    }
+    
+	...
+}
+```
+Di fungsi `get_real_path` yang juga digunakan di soal 1, ditambahkan pengecekan apabila `path` mengandung substring `/RX_`. Bila iya, maka akan kembali dicek dengan fungsi `cek_log2` apa path tersebut dibuat dengan rename atau mkdir, bila iya maka akan dilakukan dekripsi menggunakan vigenere dan atbash. Bila tidak, maka akan menggunakan rot13 dan atbash. Terakhir, `dirpath` dan `real_path` disambungkan di `fpath`.
+
+static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
+{
+    ...
+
+        else if (strstr(path, "/RX_"))
+        {
+            if (cek_log2(strstr(path, "/RX_")))
+            {
+                atbash(name);
+                encryptViginere(name);
+            }
+            else
+            {
+                atbash(name);
+                rot13(name);
+            }
+        }
+        res = (filler(buf, name, &st, 0));
+
+        if (res != 0)
+            break;
+
+	...
+
+}
+```
+Di fungsi `xmp_readdir` juga ditambahkan pengecekan apabila `path` mengandung substring `/RX_` dan juga dicek dengan fungsi `cek_log2`. Bila dibuat dengan rename, maka akan dienkripsi menggunakan atbash dan vigenere. Bila bukan, maka dienkripsi dengan rot13 dan atbash. Setelah itu `buf` akan diisi dengan `name`.
+
+Dengan kedua fungsi diatas, selain merupakan penyelesaian 2a dan 2b. 2c juga dapat terselesaikan karena apabila di `path` tidak ada `RX_`, maka tidak akan dilakukan enkripsi ataupun dekripsi.
+
+```c
+static int xmp_rename(const char *from, const char *to)
+{
+    ...
+
+    else if (strstr(to, "RX_"))
+        write_log2("rename", ffrom, fto);
+
+    ...
+}
+
+static int xmp_mkdir(const char *path, mode_t mode)
+{
+    ...
+
+    else if (strstr(fpath, "RX_"))
+        write_log2("mkdir", NULL, fpath);
+
+    ...
+}
+```
+Terakhir untuk 2d, di fungsi `xmp_rename` dan `xmp_mkdir` juga dilakukan pengecekan apakah `to` di rename atau `fpath` di mkdir mengandung `RX_`. Jika iya, maka akan memanggil fungsi `write_log2` untuk menuliskan log.
+
+Untuk soal 2e tidak dikerjakan.
+
+![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.jpg)
+Folder dan file di dalam folder RX_coba di direktori Downloads
+
+![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.jpg)
+Folder dan file di dalam folder RX_coba di folder mount program
+
+### Kendala
+1. Hanya sedikit example untuk FUSE File System
+2. Tidak dibolehkan menggunakan exec() sehingga tidak bisa mengerjakan soal 2e dengan `split`
 
 ## NO 3
 ### Penyelesaian
@@ -93,7 +334,7 @@ dan contoh memanggil lognya :
 - untuk level warning -->
 ```c
 //untuk di log no4
-    Levellog(levelw, "RMDIR", fpath);``
+    Levellog(levelw, "RMDIR", fpath);```
 
 
-![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/no%204.jpg)
+![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no%204.jpg)
