@@ -67,33 +67,36 @@ INFO::28052021-10:01:00:RENAME::/test.txt::/rename.txt
 char *levelw ="WARNING";``
 
 lalu `void Levellog` berisi format log yang akan masukkan ke dalam file di SinSeiFS.log
-waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``. isi oid Levellog adala sebagi berikut:
+waktu yang digunakan adalah waktu yang terdapat dalam komputer kita ``struct tm tm = *localtime(&t)``. isi void Levellog adala sebagi berikut:
 ```c
-void Levellog(char *level, char* desc, const char* path) {
+void Levellog(char *level, char* desc, const char* path) 
+{
 	FILE *file_log = fopen(LOG, "a");
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
-
 	int tahun = tm.tm_year+1900;
 	int bulan = tm.tm_mon+1;
 	int hari = tm.tm_mday;
 	int jam = tm.tm_hour;
 	int menit = tm.tm_min;
 	int detik = tm.tm_sec;
-
 	fprintf(file_log, "%s::%d%d%d-%02d:%02d:%02d::%s::%s\n", level, hari, bulan, tahun, jam, menit, detik, desc, path);
 	fclose(file_log);
-}```
+}
+```
 
 dan contoh memanggil lognya :
 - untuk level info-->
 ```c
 //bikin lognya
-    Levellog(leveli, "CD", path);```
+    Levellog(leveli, "CD", path);
+```
+
 - untuk level warning -->
 ```c
 //untuk di log no4
-    Levellog(levelw, "RMDIR", fpath);``
+    Levellog(levelw, "RMDIR", fpath);
+```
 
 
 ![alt text](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/no%204.jpg)
