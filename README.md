@@ -268,10 +268,10 @@ Terakhir untuk 2d, di fungsi `xmp_rename` dan `xmp_mkdir` juga dilakukan pengece
 
 Untuk soal 2e tidak dikerjakan.
 
-![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.jpg)
+![file asli](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-1.png)
 Folder dan file di dalam folder RX_coba di direktori Downloads
 
-![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.jpg)
+![file mount](https://github.com/sisop-E03/soal-shift-sisop-modul-4-E03-2021/blob/master/images/no3-2.png)
 Folder dan file di dalam folder RX_coba di folder mount program
 
 ### Kendala
