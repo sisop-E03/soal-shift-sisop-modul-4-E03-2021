@@ -213,6 +213,7 @@ char *get_real_path(const char *path)
 ```
 Di fungsi `get_real_path` yang juga digunakan di soal 1, ditambahkan pengecekan apabila `path` mengandung substring `/RX_`. Bila iya, maka akan kembali dicek dengan fungsi `cek_log2` apa path tersebut dibuat dengan rename atau mkdir, bila iya maka akan dilakukan dekripsi menggunakan vigenere dan atbash. Bila tidak, maka akan menggunakan rot13 dan atbash. Terakhir, `dirpath` dan `real_path` disambungkan di `fpath`.
 
+```c
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
     ...
